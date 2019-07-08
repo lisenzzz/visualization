@@ -8,62 +8,93 @@
     <script type="text/javascript" src="/static/js/toobar.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
+            var xmlhttp;
+            if (window.XMLHttpRequest)
+                {// code for IE7+, Firefox, Chrome, Opera, Safari
+                    xmlhttp=new XMLHttpRequest();
+                }
+            else
+                {// code for IE6, IE5
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+            xmlhttp.onreadystatechange=function()
+                {
+                    if (xmlhttp.readyState==4 && xmlhttp.status==200)
+                        {
+                            document.getElementById("myDiv").innerHTML=xmlhttp.responseText;
+                        }
+                }
+            xmlhttp.open("GET","/IC",true);
+            xmlhttp.send();
+            var max_set = {{ max_set }};
+            var actived_nodes = {{ actived_nodes }};
+            var number_of_nodes = parseInt({{ number_of_nodes }});
+            var network_weight = {{ networkWeight }}
             var canvas = document.getElementById('canvas');
             var stage = new JTopo.Stage(canvas);
             showJTopoToobar(stage);
             var scene = new JTopo.Scene(stage);
-            scene.background = '/static/image/2.jpg';
-
-            var node = new JTopo.Node("hello");
-            console.log(node);
-            node.setLocation(20, 20);
-            scene.add(node);
-
-            node.mousedown(function (event) {
-                if(event.button == 2){
-                    node.text = '按下右键';
+            scene.background = '/static/image/3.jpg';
+            function addNode(text) {
+                var node = new JTopo.CircleNode();
+                node.fontColor = '0,0,0';
+                node.setLocation(Math.random()*1000, Math.random()*548);
+                node.setSize(20, 20);
+                node.radius = 10;
+                {#node.layout = {type:'circle', radius: 20};#}
+                scene.add(node);
+                node.text = text;
+                node.textPosition = 'Middle_Center'
+                return node;
+            }
+            function addLink(nodeA, nodeZ) {
+                var link = new JTopo.Link(nodeA, nodeZ);
+                link.strokeColor = '204,204,204';
+                link.lineWidth = 1;
+                scene.add(link);
+                return link;
+            }
+            var nodes = new Array();
+            for(var i=0;i < number_of_nodes;i++){
+                nodes.push(addNode(i));
+            }
+            for(var i=0;i< number_of_nodes;i++){
+                for(var j=0;j< number_of_nodes;j++){
+                    if(network_weight[i][j]!=0){
+                        addLink(nodes[i], nodes[j]);
+                    }
                 }
-                else if(event.button == 1){
-                    node.text = '按下中键';
-                }else if(event.button == 0){
-                    node.text = '按下左键';
+            }
+            nodes[3].layout = {type:'circle', radius: 10}
+            JTopo.layout.layoutNode(scene, nodes[0], true);
+            $('#start').click(function () {
+                function a(node) {
+                    node.fillColor = JTopo.util.randomColor();
                 }
-            });
-
-            node.mouseup(function (event) {
-                if(event.button == 2){
-                    node.text = '松开右键';
+                for(var i=0;i<actived_nodes.length;i++){
+                    setTimeout(a(nodes[actived_nodes[i]]),5000);
+                    {#JTopo.Animate.stepByStep(nodes[actived_nodes[i]], {fillColor:'red',x:300, y:400}, 5000, true).start()#}
                 }
-                else if(event.button == 1){
-                    node.text = '松开中键';
-                }else if(event.button == 0){
-                    node.text = '松开左键';
-                }
-            });
-            node.click(function(event){
-                console.log("单击");
-            });
-            node.dbclick(function(event){
-                console.log("双击");
-            });
-            node.mousedrag(function(event){
-                console.log("拖拽");
-            });
-            node.mouseover(function(event){
-                console.log("mouseover");
-            });
-            node.mousemove(function(event){
-                console.log("mousemove");
-            });
-            node.mouseout(function(event){
-                console.log("mouseout");
             });
         })
     </script>
 </head>
 <body>
-<div id="content" width="850px">
-    <canvas id="canvas" width="850px"></canvas>
+<div id="content" style="width: 1010px">
+    <canvas id="canvas" width="1000" height="548"></canvas>
+    <select>
+        <option value ="0">IC</option>
+        <option value ="1">LT</option>
+    </select>
+    <label>种子节点个数</label>
+    <select>
+        <option value ="1">1</option>
+        <option value ="2">2</option>
+        <option value ="3">3</option>
+        <option value ="4">4</option>
+        <option value ="5">5</option>
+    </select>
+    <button id="start">开始</button>
 </div>
 
 
